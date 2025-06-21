@@ -1,5 +1,4 @@
-const db = require('../models');
-const Usuario = db.Usuario;
+const { Usuario } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -34,6 +33,21 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error en el servidor' });
+  }
+};
+
+// Controlador para cerrar sesión
+exports.logout = async (req, res) => {
+  try {
+    res.clearCookie('token', { 
+      httpOnly: true, 
+      sameSite: 'strict', 
+      secure: process.env.NODE_ENV === 'production' 
+    });
+    res.json({ mensaje: 'Sesión cerrada correctamente.' });
+  } catch (error) {
+    console.error('Error en logout:', error);
+    res.status(500).json({ error: error.message });
   }
 };
 

@@ -3,10 +3,13 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuarioController');
 
 // Ruta para registrar un usuario nuevo
-router.post('/', usuarioController.register);
+router.post('/auth/register', usuarioController.register);
 
 // Ruta para iniciar sesión de usuario
 router.post('/auth/login', usuarioController.login);
+
+// Ruta para cerrar sesión
+router.post('/auth/logout', usuarioController.logout);
 
 // Ruta para ver todos los usuarios
 router.get('/', usuarioController.getAllUsuarios);
