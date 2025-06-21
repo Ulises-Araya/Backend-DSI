@@ -1,4 +1,5 @@
-const { Sala } = require('../models');
+const db = require('../models');
+const Sala = db.Sala;
 
 // Obtener todas las salas
 exports.getAll = async (req, res) => {

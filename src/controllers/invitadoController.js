@@ -1,4 +1,7 @@
-const { InvitadosTurno } = require('../models');
+const db = require('../models');
+const InvitadosTurno = db.InvitadosTurno;
+const Usuario = db.Usuario;
+const Turno = db.Turno;
 
 // Obtener invitados por id_turno
 exports.getByTurno = async (req, res) => {
@@ -23,7 +26,6 @@ exports.create = async (req, res) => {
 // Obtener invitaciones pendientes para un usuario
 exports.getInvitacionesPendientes = async (req, res) => {
   try {
-    const { Turno, Usuario } = require('../models');
     const invitaciones = await InvitadosTurno.findAll({
       where: {
         id_usuario: req.params.id_usuario,
@@ -42,7 +44,6 @@ exports.getInvitacionesPendientes = async (req, res) => {
 // Actualizar el estado de una invitación
 exports.updateEstadoInvitacion = async (req, res) => {
   try {
-    const { InvitadosTurno } = require('../models');
     const { id } = req.params;
     const { estado_invitacion } = req.body;
 
@@ -64,7 +65,6 @@ exports.updateEstadoInvitacion = async (req, res) => {
 // Obtener turnos aceptados como invitado para un usuario
 exports.getTurnosAceptados = async (req, res) => {
   try {
-    const { Turno, Usuario, InvitadosTurno } = require('../models');
     const invitaciones = await InvitadosTurno.findAll({
       where: {
         id_usuario: req.params.id_usuario,

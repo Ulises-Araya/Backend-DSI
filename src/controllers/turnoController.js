@@ -1,4 +1,8 @@
-const { Turno, InvitadosTurno } = require('../models');
+const db = require('../models');
+const Turno = db.Turno;
+const InvitadosTurno = db.InvitadosTurno;
+const Usuario = db.Usuario;
+const Sala = db.Sala;
 
 // Obtener todos los turnos (solo datos básicos, sin joins)
 exports.getAllTurnos = async (req, res) => {
@@ -83,7 +87,6 @@ exports.createTurno = async (req, res) => {
 // Endpoint para obtener todos los turnos con usuario creador, invitados y sala (para admin/encargado y frontend)
 exports.getAllTurnosFull = async (req, res) => {
   try {
-    const { Usuario, InvitadosTurno, Sala } = require('../models');
     const turnos = await Turno.findAll({
       include: [
         {
@@ -121,7 +124,6 @@ exports.updateTurno = async (req, res) => {
 
     // Si se envía id_sala, también actualiza el campo area (nombre de la sala)
     if (req.body.id_sala) {
-      const { Sala } = require('../models');
       const sala = await Sala.findByPk(req.body.id_sala);
       if (sala) {
         req.body.area = sala.nombre;
@@ -139,7 +141,6 @@ exports.updateTurno = async (req, res) => {
 // Obtener un turno por ID con su sala relacionada
 exports.getTurnoConSala = async (req, res) => {
   try {
-    const { Sala } = require('../models');
     const turno = await Turno.findByPk(req.params.id, {
       include: [
         {

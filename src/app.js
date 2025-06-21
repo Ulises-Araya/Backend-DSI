@@ -7,6 +7,11 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const app = express();
 
+const db = require('./models');
+db.sequelize.authenticate()
+  .then(() => console.log('Conexión exitosa a la base de datos Supabase'))
+  .catch(err => console.error('Error al conectar con la base de datos:', err));
+
 // Configura CORS para permitir solicitudes desde el frontend
 const allowedOrigins = [
   'http://localhost:9002',
