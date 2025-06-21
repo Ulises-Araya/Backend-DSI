@@ -26,6 +26,10 @@ module.exports = (sequelize, DataTypes) => {
     rol: {
       type: DataTypes.ENUM('usuario', 'admin'),
       defaultValue: 'usuario'
+    },
+    foto_url: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   }, {
     tableName: 'usuarios',
