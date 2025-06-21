@@ -1,3 +1,6 @@
+const { Sequelize } = require('sequelize');
+require('dotenv').config(); // Asegurate de que esto esté si usás variables .env locales
+
 const isLocalhost = process.env.DATABASE_URL && (
   process.env.DATABASE_URL.includes('localhost') || 
   process.env.DATABASE_URL.includes('127.0.0.1')
@@ -30,3 +33,5 @@ if(process.env.DATABASE_URL) {
     config
   );
 }
+
+module.exports = { sequelize };
