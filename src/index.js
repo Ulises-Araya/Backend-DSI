@@ -10,10 +10,19 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 // Configura CORS para permitir solicitudes desde el frontend
+const allowedOrigins = ['http://localhost:9002', 'https://arborvitae-scheduler.vercel.app'];
+
 app.use(cors({
-  origin: 'http://localhost:9002', // Cambia esto al puerto real de tu frontend
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true
 }));
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
