@@ -1,3 +1,4 @@
+
 const { Usuario } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -77,7 +78,10 @@ exports.register = async (req, res) => {
     res.status(201).json({ mensaje: 'Usuario registrado correctamente', id: usuario.id, token });
   } catch (error) {
     console.error(error);
-    res.status(400).json({ error: error.message });
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'El DNI o el email ya se encuentran registrados.' });
+    }
+    res.status(400).json({ error: 'Error de validación. Verifique los datos ingresados.' });
   }
 };
 
