@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const usuarioController = require('../controllers/usuarioController');
 
+// --- AUTH ROUTES ---
 // Ruta para registrar un usuario nuevo
 router.post('/auth/register', usuarioController.register);
 
@@ -12,10 +13,18 @@ router.post('/auth/login', usuarioController.login);
 // Ruta para cerrar sesión
 router.post('/auth/logout', usuarioController.logout);
 
+// Solicitar reseteo de contraseña
+router.post('/auth/forgot-password', usuarioController.forgotPassword);
+
+// Resetear la contraseña con token
+router.post('/auth/reset-password', usuarioController.resetPassword);
+
+
+// --- USER DATA ROUTES ---
 // Ruta para ver todos los usuarios
 router.get('/', usuarioController.getAllUsuarios);
 
-//Ruta para buscar usuario por dni
+// Ruta para buscar usuario por dni
 router.get('/dni/:dni', usuarioController.getUsuarioByDni);
 
 // Ruta para ver un usuario por su ID
@@ -27,10 +36,5 @@ router.put('/:id', usuarioController.updateUsuario);
 // Ruta para eliminar usuario
 router.delete('/:id', usuarioController.deleteUsuario);
 
-// Solicitar reseteo de contraseña
-router.post('/auth/forgot-password', usuarioController.forgotPassword);
-
-// Resetear la contraseña con token
-router.post('/auth/reset-password', usuarioController.resetPassword);
 
 module.exports = router;

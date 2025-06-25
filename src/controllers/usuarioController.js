@@ -21,13 +21,13 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { id: usuario.id, dni: usuario.dni, rol: usuario.rol },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '8h' } // Increased session time
     );
     res.cookie('token', token, {
       httpOnly: true, // La cookie no es accesible desde JS del navegador
       secure: process.env.NODE_ENV === 'production', // En producción, solo HTTPS
       sameSite: 'strict', // Protege contra CSRF
-      maxAge: 60 * 60 * 1000 // 1 hora en milisegundos
+      maxAge: 8 * 60 * 60 * 1000 // 8 horas en milisegundos
     });
 
     res.json({ mensaje: 'Inicio de sesión exitoso', id: usuario.id });
@@ -52,14 +52,14 @@ exports.logout = async (req, res) => {
   }
 };
 
-// Registro de usuario (POST /usuarios)
+// Registro de usuario
 exports.register = async (req, res) => {
   try {
     const { nombre, email, dni, password, rol } = req.body;
     // Verifica que no exista el usuario por dni o email
     const existe = await Usuario.findOne({ where: { dni } }) || await Usuario.findOne({ where: { email } });
     if (existe) {
-      return res.status(400).json({ error: 'El usuario ya existe con ese DNI o email' });
+      return res.status(400).json({ error: 'El DNI o el email ya se encuentran registrados.' });
     }
     // Crea el usuario (el hook beforeCreate encripta la contraseña)
     const usuario = await Usuario.create({
@@ -69,13 +69,8 @@ exports.register = async (req, res) => {
       password,
       rol: rol || 'usuario'
     });
-    // Opcional: genera token al registrar
-    const token = jwt.sign(
-      { id: usuario.id, dni: usuario.dni, rol: usuario.rol },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-    res.status(201).json({ mensaje: 'Usuario registrado correctamente', id: usuario.id, token });
+    
+    res.status(201).json({ mensaje: 'Usuario registrado correctamente', id: usuario.id });
   } catch (error) {
     console.error(error);
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -101,12 +96,10 @@ exports.getAllUsuarios = async (req, res) => {
 // Trae un usuario por su ID (sin mostrar la contraseña)
 exports.getUsuarioById = async (req, res) => {
   try {
-    console.log('Buscando usuario con id:', req.params.id);
     const usuario = await Usuario.findByPk(req.params.id, {
       attributes: { exclude: ['password'] }
     });
     if (!usuario) {
-      console.log('No se encontró usuario');
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     res.json(usuario);
@@ -126,7 +119,6 @@ exports.updateUsuario = async (req, res) => {
 
     // Si se envía una nueva contraseña, encripta antes de guardar
     if (req.body.password) {
-      const bcrypt = require('bcrypt');
       const salt = await bcrypt.genSalt(10);
       req.body.password = await bcrypt.hash(req.body.password, salt);
     } else {
@@ -157,9 +149,6 @@ exports.deleteUsuario = async (req, res) => {
   }
 };
 
-//Cambio hecho para el turnero
-//
-//
 // Busca un usuario por su DNI
 exports.getUsuarioByDni = async (req, res) => {
   try {
@@ -174,25 +163,25 @@ exports.getUsuarioByDni = async (req, res) => {
   }
 };
 
-// Solicitar reseteo de contraseña (envía token, normalmente por email)
+// Solicitar reseteo de contraseña (envía token)
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email, dni } = req.body;
-    const usuario = await Usuario.findOne({
-      where: email ? { email } : { dni }
-    });
+    const { dni } = req.body;
+    const usuario = await Usuario.findOne({ where: { dni } });
     if (!usuario) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     // Genera un token de reseteo válido por 15 minutos
     const resetToken = jwt.sign(
-      { id: usuario.id, dni: usuario.dni },
+      { id: usuario.id, dni: usuario.dni, type: 'reset' },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
-    // Aquí deberías enviar el token por email. Por ahora, lo devolvemos en la respuesta.
+    
+    // Devolvemos el token en la respuesta para un flujo simple.
     res.json({ mensaje: 'Token de reseteo generado', resetToken });
   } catch (error) {
+    console.error(error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -208,12 +197,14 @@ exports.resetPassword = async (req, res) => {
     try {
       payload = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
+      // Esto captura tokens inválidos o expirados
       return res.status(400).json({ error: 'Token inválido o expirado' });
     }
-    // Verifica que el DNI coincida con el del token
-    if (payload.dni !== dni) {
-      return res.status(400).json({ error: 'DNI inválido para este token' });
+    // Verifica que el token sea para reseteo y corresponda al DNI
+    if (payload.type !== 'reset' || payload.dni !== dni) {
+      return res.status(400).json({ error: 'Token o DNI no válido para esta acción' });
     }
+
     const usuario = await Usuario.findOne({ where: { dni } });
     if (!usuario) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -222,8 +213,10 @@ exports.resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     usuario.password = await bcrypt.hash(newPassword, salt);
     await usuario.save();
+
     res.json({ mensaje: 'Contraseña actualizada correctamente' });
   } catch (error) {
+    console.error(error);
     res.status(400).json({ error: error.message });
   }
 };
